@@ -28,6 +28,7 @@ class DataUtil():
         self.lines=[]
         self.batch_size=batch_size
         self.cursor=0
+        self.current_raw_text=[]
 
     def load(self,filename):
         self.lines.clear()
@@ -44,19 +45,29 @@ class DataUtil():
         s=self.cursor
         t=s+batch_size
 
+        self.current_raw_text=[]
+
         batch_x=np.zeros((batch_size,MAX_DOC_LENGTH,len(ALPHABET)),dtype=int)
         batch_y=np.zeros((batch_size,MAX_DOC_LENGTH),dtype=int)
         for i in range(s,t):
             tweet=self.lines[i%self.sample_size]
+            
+            raw_tweet=''
+
             cnt=0
             tokens=tweet.split()
             for j,token in enumerate(tokens):
                 if len(token)==1:
+                    if cnt>=MAX_DOC_LENGTH:
+                        break
                     batch_y[i-s][cnt]=3
                     batch_x[i-s][cnt][ch2idx(token[0])]=1
                     cnt+=1
+                    raw_tweet+=token[0]
                 else:
                     for k,ch in enumerate(token):
+                        if cnt>=MAX_DOC_LENGTH:
+                            break
                         index=ch2idx(ch)
                         if k==0:
                             batch_y[i-s][cnt]=0
@@ -66,6 +77,9 @@ class DataUtil():
                             batch_y[i-s][cnt]=1
                         batch_x[i-s][cnt][index]=1
                         cnt+=1
+                        raw_tweet+=ch
+
+            self.current_raw_text.append(raw_tweet)
 
         if t>=len(self.lines):
             self.cursor=0
@@ -73,6 +87,9 @@ class DataUtil():
             self.cursor=t
 
         return batch_x,batch_y
+
+    def get_current_raw_text(self):
+        return self.current_raw_text
 
     def next_batch(self):
         num_batch=self.n_batches

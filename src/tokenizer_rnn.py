@@ -14,6 +14,7 @@ class TokenizerRNN(BasicModule):
 
         self.rnn=nn.GRU(vocab,rnn_hidden_size,
                         num_layers=rnn_layers,batch_first=True,
+                        dropout=0.5,
                         bidirectional=True
                         )
         self.rnn_feature_size=rnn_hidden_size*2
